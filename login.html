@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login</title>
+  <style>
+    /* Simple centered card layout */
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background: linear-gradient(135deg,#f2f7ff,#eaf6f1);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .card{
+      background:#fff;
+      padding:28px;
+      border-radius:12px;
+      width:320px;
+      box-shadow:0 10px 30px rgba(20,20,50,0.08);
+    }
+    h1{ margin:0 0 12px; font-size:20px; text-align:center; }
+    .field{ margin-bottom:12px; }
+    label{ display:block; font-size:13px; margin-bottom:6px; color:#333; }
+    input[type="text"], input[type="password"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #d8e0ef;
+      font-size:14px;
+      box-sizing:border-box;
+    }
+    .row{ display:flex; justify-content:space-between; align-items:center; }
+    button{
+      margin-top:8px;
+      width:100%;
+      padding:10px 12px;
+      background:#2d7cff;
+      color:white;
+      border:none;
+      border-radius:8px;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .helper{ font-size:13px; color:#666; margin-top:8px; text-align:center; }
+    .error{ color:#d32f2f; font-size:13px; margin-top:6px; }
+    .success{ color:#0b8043; font-size:13px; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <div class="card" role="main" aria-labelledby="login-heading">
+    <h1 id="login-heading">Sign in to your account</h1>
+
+    <div class="field">
+      <label for="username">Username or email</label>
+      <input id="username" name="username" type="text" autocomplete="username" required />
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required />
+    </div>
+
+    <div id="msg" aria-live="polite"></div>
+
+    <button id="loginBtn" type="button">Sign in</button>
+    <div class="helper">Don't have an account? <a href="#">Register</a></div>
+  </div>
+
+  <script>
+    // Simple client-side validation + POST to /login
+    const loginBtn = document.getElementById('loginBtn');
+    const msgDiv = document.getElementById('msg');
+
+    function showMessage(text, type='error'){
+      msgDiv.innerHTML = '';
+      const p = document.createElement('p');
+      p.textContent = text;
+      p.className = type === 'error' ? 'error' : 'success';
+      msgDiv.appendChild(p);
+    }
+
+    loginBtn.addEventListener('click', async () => {
+      msgDiv.innerHTML = '';
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      // Basic validation
+      if (!username) { showMessage('Please enter username or email.'); return; }
+      if (!password || password.length < 6) { showMessage('Password must be at least 6 characters.'); return; }
+
+      // Disable UI while sending
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Signing in...';
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showMessage('Login successful! Redirecting…', 'success');
+          // Example: redirect after short delay (or use window.location = data.redirect)
+          setTimeout(()=> window.location.href = data.redirect || '/dashboard', 800);
+        } else {
+          showMessage(data.error || 'Invalid credentials. Please try again.');
+        }
+      } catch (err) {
+        showMessage('Network error — please try again.');
+        console.error(err);
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Sign in';
+      }
+    });
+  </script>
+</body>
+</html>
